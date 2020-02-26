@@ -15,7 +15,7 @@
 ```javascript
 
     /**
-     * @description 具体使用方式参考上 `test.html` `text_easing.html`  
+     * @description 具体使用方式参考 `test.html` `text_easing.html`  
      */
     import FunnyAnime from 'funny-anime';
     //const FunnyAnime = require('funny-anime');
