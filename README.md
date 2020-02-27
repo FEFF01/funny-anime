@@ -1,6 +1,6 @@
 ## funny-anime
     
-> * 通过指定动画配置即时编译执行的js动画引擎，即使每个动画元素有上百个不同时间段（可能有重叠）不同值的缓动，每次计算也能在几个逻辑判断中得出最终值；不过即时编译需要消耗大量资源不太适用于频繁初始化并销毁的情况
+> * 通过指定动画配置即时编译执行的js动画引擎，即使每个动画元素有上百个不同时间段（可能有重叠）不同值的缓动，也可以在极少逻辑判断中得出最终值；不过即时编译需要消耗大量资源不太适用于频繁初始化并销毁的情况
 
 > * [Examples](https://feff01.github.io/funny-anime/dist/test.html)
 > * [Examples-Easing](https://feff01.github.io/funny-anime/dist/test_easing.html)
