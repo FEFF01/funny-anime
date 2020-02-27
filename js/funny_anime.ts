@@ -22,22 +22,6 @@ try {
 
 }
 
-
-/*
-class TransofrmDescripter implements Matrix {
-    elements: Array<string> = [];
-    constructor() {
-
-    }
-    setIdentity() {
-        this.elements.splice(0, this.elements.length);
-    }
-    valueOf() {
-        return this.elements.join(" ");
-    }
-}*/
-
-
 let STATUS_BASE_MASK = 0b100;
 
 class FunnyAnime extends Player {
@@ -54,11 +38,6 @@ class FunnyAnime extends Player {
             keys: ["tx", "ty", "tz"],
             parent: "matrix"
         },
-        /*{
-            name: "rotate",
-            keys: ["rx2d", "ry2d"],
-            parent: "matrix"
-        },*/
         {
             name: "rotateX",
             keys: ["rx"],
@@ -90,14 +69,6 @@ class FunnyAnime extends Player {
             keys: ["o"],
             values: { o: 1 }
         },
-        /*{
-            name: "perspectiveOrigin",
-            keys: ["pox", "poy"],
-            values: { pox: 0.5, poy: 0.5 }
-        }, {
-            name: "perspective",
-            keys: ["pv"],
-        }*/
     ].map((data: AnimationDescriptor) => {
         data.values || (data.values = {});
         data.mask || (data.mask = 0);
@@ -124,8 +95,8 @@ class FunnyAnime extends Player {
     private method_descriptor_map = { ...FunnyAnime.METHODS_MAP };
     private key_mask_map = { ...FunnyAnime.MASKS_MAP };
 
-    private use_dispatcher: { [methodName: string]: Array<string> } = {};
-    private use_keys: string[];
+    private used_dispatcher: { [methodName: string]: Array<string> } = {};
+    private used_keys: string[];
     duration = 0;
     //config: AnimationConfig;
     matrix: Matrix;
@@ -134,7 +105,7 @@ class FunnyAnime extends Player {
     custom?: Function;
     constructor(
         public target: HTMLElement | any = { style: {} },
-        public data: Array<AnimationData>,
+        public data: Array<AnimationData> | AnimationData,
         config: AnimationConfig | Function = {},
         custom?: Function
     ) {
@@ -148,13 +119,13 @@ class FunnyAnime extends Player {
         typeof this.config?.speed === "number" && (this.speed = this.config.speed);
 
         this.render = this._parse_render(
-            this._flatten(data),
+            this._flatten(data instanceof Array ? data : [data]),
             this.config as AnimationConfig
         ) || ((step: number) => { return ~0; });
         this.matrix = new (
             this.config?.matrix ||
             (
-                this.use_keys.some(key => FunnyAnime.MATRIX3D_FACTORS.indexOf(key) !== -1) ?
+                this.used_keys.some(key => FunnyAnime.MATRIX3D_FACTORS.indexOf(key) !== -1) ?
                     FunnyAnime.Matrix3d :
                     FunnyAnime.Matrix2d
             )
@@ -165,11 +136,16 @@ class FunnyAnime extends Player {
         config: AnimationConfig = {}
     ) {
         let render_code = "";
-
-        let computed_keys = Object.keys(data);
-
-        this.use_keys = computed_keys.concat(config.sync_keys);
-        let method_groups = this._get_groups(computed_keys, config);
+        this.used_keys = Object.keys(data);
+        
+        config.order === FunnyAnime.ORDER.AUTO || this.used_keys.sort((a, b) => {
+            let i1 = FunnyAnime.KEYS.indexOf(a),
+                i2 = FunnyAnime.KEYS.indexOf(b);
+            ~i1 || (i1 = this.used_keys.indexOf(a) * FunnyAnime.KEYS.length / this.used_keys.length);
+            ~i2 || (i2 = this.used_keys.indexOf(b) * FunnyAnime.KEYS.length / this.used_keys.length);
+            return i1 - i2;
+        });
+        let method_groups = this._get_groups(this.used_keys, config);
 
         for (let method_name in method_groups) {
             this["_tween_" + method_name] = Tween.parse(data, method_groups[method_name]);
@@ -182,24 +158,15 @@ class FunnyAnime extends Player {
                     (set_expr, key) => ",target._" + key + "+=this._" + key + set_expr, ";"
                 ).slice(1);
         }
-
-        config.order === FunnyAnime.ORDER.AUTO || this.use_keys.sort((a, b) => {
-            let i1 = FunnyAnime.KEYS.indexOf(a),
-                i2 = FunnyAnime.KEYS.indexOf(b);
-            ~i1 || (i1 = this.use_keys.indexOf(a) * FunnyAnime.KEYS.length / this.use_keys.length);
-            ~i2 || (i2 = this.use_keys.indexOf(b) * FunnyAnime.KEYS.length / this.use_keys.length);
-            return i1 - i2;
-        });
-
-        for (const dispatcher_name in this.use_dispatcher) {
-            let use_dispatchers: Array<AnimationDescriptor> = [];
+        for (const dispatcher_name in this.used_dispatcher) {
+            let used_dispatchers: Array<AnimationDescriptor> = [];
             let key_descriptor_map = this.key_descriptor_map;
             let code = "";
-            for (const key of this.use_dispatcher[dispatcher_name]) {
-                use_dispatchers.indexOf(key_descriptor_map[key]) === -1 &&
-                    use_dispatchers.push(key_descriptor_map[key]);
+            for (const key of this.used_dispatcher[dispatcher_name]) {
+                used_dispatchers.indexOf(key_descriptor_map[key]) === -1 &&
+                    used_dispatchers.push(key_descriptor_map[key]);
             }
-            for (const dispatcher of use_dispatchers) {
+            for (const dispatcher of used_dispatchers) {
                 for (const key of dispatcher.keys) {
                     this["_" + key] = 0;
                     isNaN(this.target["_" + key]) && (this.target["_" + key] = dispatcher.values[key] || 0);
@@ -217,7 +184,7 @@ class FunnyAnime extends Player {
                     });`;
             }
             if (dispatcher_name === "matrix") {
-                let transform_mask = this.use_dispatcher.matrix.reduce(
+                let transform_mask = this.used_dispatcher.matrix.reduce(
                     (mask, key) => mask | (FunnyAnime.MASKS_MAP[key] || 0),
                     0
                 );
@@ -286,7 +253,7 @@ class FunnyAnime extends Player {
     private _get_groups(keys: Array<string>, config: AnimationConfig) {
         let group_map: { [methodName: string]: TweenOption } = {};
         let target = this;
-        let use_dispatcher = this.use_dispatcher;
+        let used_dispatcher = this.used_dispatcher;
         let key_mask_map = this.key_mask_map;
         function _fill_tween_option(
             option: TweenOption,
@@ -305,7 +272,7 @@ class FunnyAnime extends Player {
             let descriptor = this.key_descriptor_map[key];
             let method_name = descriptor.name;
             let dispatcher_name = descriptor.parent || method_name;
-            (use_dispatcher[dispatcher_name] || (use_dispatcher[dispatcher_name] = [])).push(key);
+            (used_dispatcher[dispatcher_name] || (used_dispatcher[dispatcher_name] = [])).push(key);
 
             if (config[key]) {
                 _fill_tween_option(group_map[key] = { keys: [key] }, config[key], config);
@@ -335,3 +302,33 @@ try {
 }
 
 module.exports = FunnyAnime;
+
+
+
+/*
+class TransofrmDescripter implements Matrix {
+    elements: Array<string> = [];
+    constructor() {
+
+    }
+    setIdentity() {
+        this.elements.splice(0, this.elements.length);
+    }
+    valueOf() {
+        return this.elements.join(" ");
+    }
+}*/
+
+/*{
+    name: "rotate",
+    keys: ["rx2d", "ry2d"],
+    parent: "matrix"
+},*/
+/*{
+    name: "perspectiveOrigin",
+    keys: ["pox", "poy"],
+    values: { pox: 0.5, poy: 0.5 }
+}, {
+    name: "perspective",
+    keys: ["pv"],
+}*/

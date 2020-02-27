@@ -5,7 +5,8 @@ import Easing from './easing';
 
 
 
-let test_data = [
+let test_list = [
+
     {
         data: [
             { tt: 1000, tx: 100, es: Easing.easeBounce }
@@ -21,14 +22,14 @@ let test_data = [
     },
     {
         data: [
-            { tt: 1000, tx: 100, es: Easing.easeBounce }
+            { tt: 1000, tx: 100, rz: 180, es: Easing.easeBounce }
         ],
         config: {
             direction: "alternate",
             loop: 3,
         },
         args: `[
-            { tt: 1000, tx: 100, es: Easing.easeBounce }
+            { tt: 1000, tx: 100, rz: 180, es: Easing.easeBounce }
         ],{
             direction: "alternate",
             loop: 3,
@@ -36,15 +37,19 @@ let test_data = [
     },
     {
         data: [
-            { tt: 1000, tx: 100, es: Easing.easeBounce }
+            { rz: 0, tx: 100 },
+            { tt: 1000, rz: 120, es: Easing.easeBounce }
         ],
         config: {
+            order: "auto",
             direction: "accumulative",
             loop: 3,
         },
         args: `[
-            { tt: 1000, tx: 100, es: Easing.easeBounce }
+            { rz: 0, tx: 100 },
+            { tt: 1000, rz: 120, es: Easing.easeBounce }
         ],{
+            order:"auto",
             direction: "accumulative",
             loop: 3,
         }`
@@ -124,6 +129,37 @@ let test_data = [
             direction: "accumulative",
             loop: 3,
         }`
+    },
+    function (wrap, text_field, element) {
+        let anime1 = new FunnyAnime(element,
+            [{ tt: 1000 * 2, tx: 100 * 2, rz: 100 * 2 }],
+            { loop: true, direction: "alternate" }
+        ).play();
+        let anime2 = new FunnyAnime(element,
+            [{ tt: 777 * 2, tx: 55 * 2, rz: 133 * 2 }],
+            { loop: true, direction: "alternate" }
+        ).play();
+
+        wrap.onmouseenter = wrap.onclick = () => {
+            wrap.onmouseenter = null;
+            anime1.play();
+            anime2.play();
+        }
+
+        text_field.innerHTML = `
+        /**
+         动画周期最细能划分到每个动画元素，
+         如果需要为一个元素拥有两个不同周期的缓动，
+         需要为该元素实例化两个 FunnyAnime 对象分别指定对于的数据
+         */
+new FunnyAnime(element,
+            [{ tt: 1000 * 2, tx: 100 * 2, rz: 100 * 2 }],
+            { loop: true, direction: "alternate" }
+        ).play();
+new FunnyAnime(element,
+            [{ tt: 777 * 2, tx: 55 * 2, rz: 133 * 2 }],
+            { loop: true, direction: "alternate" }
+        ).play();`;
     },
     {
         data: [
@@ -192,7 +228,7 @@ let test_data = [
         },function (green, red, bule){...}`
     }
 ];
-for (let { data, config, args, custom } of test_data) {
+for (let item of test_list) {
     let wrap = document.createElement("li");
     wrap.innerHTML = `
     <code></code>
@@ -202,12 +238,16 @@ for (let { data, config, args, custom } of test_data) {
     anime_box.appendChild(wrap);
     let particule = wrap.querySelector('.particule');
     let text_field = wrap.querySelector('code');
-    let anime = new FunnyAnime(particule, data, config, custom && custom.bind(particule));
-
-    wrap.onmouseenter = wrap.onclick = () => {
-        wrap.onmouseenter = null;
-        anime.play(0);
+    if (typeof item !== "function") {
+        let { data, config, args, custom } = item;
+        wrap._anime = new FunnyAnime(particule, data, config, custom && custom.bind(particule));
+        text_field.innerHTML = `new FunnyAnime(element,${args})`;
+        wrap.onmouseenter = wrap.onclick = () => {
+            wrap.onmouseenter = null;
+            wrap._anime && wrap._anime.play(0);
+        }
+    } else {
+        item(wrap, text_field, particule);
     }
     //anime.play.bind(anime, 0, undefined);
-    text_field.innerHTML = `new FunnyAnime(element,${args})`;
 }

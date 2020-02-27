@@ -98,11 +98,11 @@ class Player {
         }
         return this;
     }
-    stop() {
+    /*stop() {
         this.pause();
         this.dt = 0;
         return this;
-    }
+    }*/
     play(ft: number = this.dt, tt: number = MAX_SAFE_TIME) {
         let _now = TICK.now();
         if (!this.config?.onPlay?.(ft, tt)) {

@@ -11,27 +11,36 @@ let test_list = [
         let textarea = document.createElement("textarea");
         textarea.style.cssText = "width:100%;box-sizing:border-box;min-height:106px;font-family:inherit;font-size:0.9rem;padding:4px;"
         text_field.appendChild(textarea);
+        let anime;
         wrap.onclick = function (e) {
-            if (e.target.tagName !== "TEXTAREA") {
-                let ease;
-                try {
-                    ease = eval(textarea.value);
-                    console.log(ease.toFunction());
-                } catch (e) {
-                }
-                if (ease) {
-                    particule._left = 0;
-                    new FunnyAnime(
-                        particule,
-                        [{ tt: 1000, left: 100, es: ease }],
-                        function (left) {
-                            particule.innerHTML = `${left | 0}%`;
-                            particule.style.left = `${left.toFixed(6)}%`;
-                        }
-                    ).play();
-                }
+            if (e.target.tagName !== "TEXTAREA" && anime) {
+                anime.play(0);
             }
         }
+        textarea.onchange = function (e) {
+            let ease;
+            try {
+                ease = eval(textarea.value);
+                console.log(ease.toFunction());
+            } catch (e) {
+            }
+            if (anime) {
+                anime.stop();
+                anime = null;
+            }
+            if (ease) {
+                particule._left = 0;
+                anime = new FunnyAnime(
+                    particule,
+                    [{ tt: 1000, left: 100, es: ease }],
+                    function (left) {
+                        particule.innerHTML = `${left | 0}%`;
+                        particule.style.left = `${left.toFixed(6)}%`;
+                    }
+                ).play();
+            }
+        }
+
     },
     {
         text:
@@ -116,7 +125,7 @@ let test_list = [
         text: "Easing.easeBack.concat(Easing.easeReverse)",
         ease: Easing.easeBack.concat(Easing.easeReverse)
     },
-    
+
     {
         text: "Easing.mix(Easing.elastic(),Easing.easeBounce)",
         ease: Easing.mix(Easing.elastic(), Easing.easeBounce)
