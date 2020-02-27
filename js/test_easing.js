@@ -25,7 +25,7 @@ let test_list = [
             } catch (e) {
             }
             if (anime) {
-                anime.stop();
+                anime.pause();
                 anime = null;
             }
             if (ease) {
