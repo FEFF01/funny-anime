@@ -16,6 +16,7 @@ let test_list = [
                 let ease;
                 try {
                     ease = eval(textarea.value);
+                    console.log(ease.toFunction());
                 } catch (e) {
                 }
                 if (ease) {
@@ -114,6 +115,11 @@ let test_list = [
     {
         text: "Easing.easeBack.concat(Easing.easeReverse)",
         ease: Easing.easeBack.concat(Easing.easeReverse)
+    },
+    
+    {
+        text: "Easing.mix(Easing.elastic(),Easing.easeBounce)",
+        ease: Easing.mix(Easing.elastic(), Easing.easeBounce)
     },
 
     ...Array.prototype.concat.apply([], ["Quad", "Cubic", "Quart", "Quint", "Expo"].map(name => ["In" + name, "Out" + name, "InOut" + name]))

@@ -10,6 +10,22 @@ class Easing {
     static symmetry(ease: Easing | string) {
         return Easing.split(0.5, ease);
     }
+    static mix(...ease_list: Array<Easing | string>) {
+        return new Easing(
+            ease_list.map(
+                ease => `(${ease.toString()})/${ease_list.length}`
+            ).join("+")
+        );
+    }
+    static concat(...ease_list: Array<Easing | string>) {
+        return new Easing(
+            ease_list.reduce(
+                (wrap: string, ease) => wrap.replace(
+                    /\$\{\S*?\$\S*?\}/g,
+                    `(${ease.toString()})`
+                ), Easing.easeLinear.expr)
+        );
+    }
     static split(lt: number, ease_l: Easing | string, ease_r = ease_l) {
         if (lt > 0 && lt < 1) {
             let lf = 1 / lt, rf = 1 / (1 - lt);
@@ -68,16 +84,6 @@ class Easing {
 
     static easeInOutQuad: Easing; static easeInOutCubic: Easing; static easeInOutQuart: Easing; static easeInOutQuint: Easing; static easeInOutExpo: Easing;
 
-    static concat(...easeing_list: Array<Easing | string>) {
-        return new Easing(
-            easeing_list.reduce(
-                (wrap: string, easeing) => wrap.replace(
-                    /\$\{\S*?\$\S*?\}/g,
-                    `(${easeing.toString()})`
-                ), Easing.easeLinear.expr)
-        );
-    }
-
     constructor(
         expr: string | Easing,
         nsteps?: number,
@@ -103,8 +109,11 @@ class Easing {
     steps(nsteps = this.nsteps, direction = this.direction) {
         return new Easing(this.expr, nsteps, direction);
     }
-    concat(...easeing_list: Easing[]) {
-        return Easing.concat(this, ...easeing_list);
+    mix(...ease_list: Array<Easing>) {
+        return Easing.mix(this, ...ease_list);
+    }
+    concat(...ease_list: Array<Easing>) {
+        return Easing.concat(this, ...ease_list);
     }
     toFunction() {
         return new Function("p", `var __a,__b,__t;return ${this.toString("p")};`) as (process: number) => number;
@@ -157,5 +166,3 @@ export default Easing;
         return this.concat(Easing.easeBounce);
     }
  */
-
-
