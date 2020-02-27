@@ -6,7 +6,63 @@ const Easing = FunnyAnime.EASING;
 
 let test_list = [
 
-
+    function (wrap, text_field, particule) {
+        wrap.style.fontSize = "0";
+        let textarea = document.createElement("textarea");
+        textarea.style.cssText = "width:100%;box-sizing:border-box;min-height:106px;font-family:inherit;font-size:0.9rem;padding:4px;"
+        text_field.appendChild(textarea);
+        wrap.onclick = function (e) {
+            if (e.target.tagName !== "TEXTAREA") {
+                let ease;
+                try {
+                    ease = eval(textarea.value);
+                } catch (e) {
+                }
+                if (ease) {
+                    particule._left = 0;
+                    new FunnyAnime(
+                        particule,
+                        [{ tt: 1000, left: 100, es: ease }],
+                        function (left) {
+                            particule.innerHTML = `${left | 0}%`;
+                            particule.style.left = `${left.toFixed(6)}%`;
+                        }
+                    ).play();
+                }
+            }
+        }
+    },
+    {
+        text:
+            `Easing.easeBack.concat(
+                Easing.bezier(-1,1.2),
+                Easing.easeSwing,
+                Easing.easeBounce
+                )`,
+        ease: Easing.easeBack.concat(
+            Easing.bezier(-1, 1.2),
+            Easing.easeSwing,
+            Easing.easeBounce
+        )
+    },
+    {
+        text: `Easing.split(
+            0.5,
+            Easing.split(
+                0.4,
+                Easing.easeBack.split(0.4),
+                Easing.easeBounce
+            )
+        )`,
+        ease: Easing.split(
+            0.5,
+            Easing.split(
+                0.4,
+                Easing.easeBack.split(0.5),
+                Easing.easeBounce
+            )
+        )
+    },
     "Linear",
     "InBack",
     "OutBack",
@@ -43,7 +99,7 @@ let test_list = [
     },
     {
         text: "Easing.elastic(1,0.5).symmetry()",
-        ease: Easing.elastic(1,0.5).symmetry()
+        ease: Easing.elastic(1, 0.5).symmetry()
     },
     {
         text: "Easing.elastic(1, 0.5).mirror().symmetry()",
@@ -59,37 +115,6 @@ let test_list = [
         text: "Easing.easeBack.concat(Easing.easeReverse)",
         ease: Easing.easeBack.concat(Easing.easeReverse)
     },
-    {
-        text:
-            `Easing.easeBack.concat(
-                Easing.bezier(-1,1.2),
-                Easing.easeSwing,
-                Easing.easeBounce
-                )`,
-        ease: Easing.easeBack.concat(
-            Easing.bezier(-1, 1.2),
-            Easing.easeSwing,
-            Easing.easeBounce
-        )
-    },
-    {
-        text: `Easing.split(
-            0.5,
-            Easing.split(
-                0.4,
-                Easing.easeBack.split(0.4),
-                Easing.easeBounce
-            )
-        )`,
-        ease: Easing.split(
-            0.5,
-            Easing.split(
-                0.4,
-                Easing.easeBack.split(0.5),
-                Easing.easeBounce
-            )
-        )
-    },
 
     ...Array.prototype.concat.apply([], ["Quad", "Cubic", "Quart", "Quint", "Expo"].map(name => ["In" + name, "Out" + name, "InOut" + name]))
 
@@ -97,22 +122,6 @@ let test_list = [
 
 
 for (let item of test_list) {
-    let text, ease;
-    if (typeof item === "string") {
-        let parts = item.split("|");
-        if (parts.length === 1) {
-            text = `Easing.ease${parts[0]}`;
-            ease = Easing[`ease${parts[0]}`];
-        } else {
-            let args = parts[1].split(",").map(arg => Number(arg));
-            text = `Easing.${parts[0]}(${parts[1]})`;
-            ease = Easing[`${parts[0]}`];
-            ease = ease.apply(ease, args);
-        }
-    } else {
-        text = item.text;
-        ease = item.ease;
-    }
     let wrap = document.createElement("li");
     wrap.innerHTML = `
     <code></code>
@@ -132,6 +141,27 @@ for (let item of test_list) {
     anime_box.appendChild(wrap);
     let particule = wrap.querySelector('.particule');
     let text_field = wrap.querySelector('code');
+
+    let text, ease;
+    if (typeof item === "string") {
+        let parts = item.split("|");
+        if (parts.length === 1) {
+            text = `Easing.ease${parts[0]}`;
+            ease = Easing[`ease${parts[0]}`];
+        } else {
+            let args = parts[1].split(",").map(arg => Number(arg));
+            text = `Easing.${parts[0]}(${parts[1]})`;
+            ease = Easing[`${parts[0]}`];
+            ease = ease.apply(ease, args);
+        }
+    } else if (typeof item !== "function") {
+        ease = item.ease;
+        text = item.text;
+
+    } else {
+        item(wrap, text_field, particule);
+        continue;
+    }
     let anime = new FunnyAnime(
         particule,
         [{ tt: 1000, left: 100, es: ease }],
@@ -153,5 +183,6 @@ for (let item of test_list) {
     }
     wrap.onclick = anime.play.bind(anime, 0, undefined);
     text_field.innerHTML = text;
+
 }
  //return Easing.concat("__t<0.5?(__t*=2,${$}/2):(__t=2-__t*2,1-${$}/2)", ease);

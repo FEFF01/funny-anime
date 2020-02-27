@@ -1,8 +1,8 @@
 ## funny-anime
     通过指定动画配置即时编译执行的js动画引擎
 
-> * [demo](https://feff01.github.io/funny-anime/dist/test.html)
-> * [demo-easing](https://feff01.github.io/funny-anime/dist/test_easing.html)
+> * [Examples](https://feff01.github.io/funny-anime/dist/test.html)
+> * [Examples-Easing](https://feff01.github.io/funny-anime/dist/test_easing.html)
 
 
 ## 使用

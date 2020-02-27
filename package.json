@@ -1,6 +1,6 @@
 {
   "name": "funny-anime",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "./dist/js/funny_anime.js",
   "private": false,
   "license": "MIT",
