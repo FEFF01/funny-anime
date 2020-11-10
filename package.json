@@ -1,6 +1,6 @@
 {
   "name": "funny-anime",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "JavaScript animation angine",
   "main": "./dist/js/funny_anime.js",
   "private": false,
